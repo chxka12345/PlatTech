@@ -9,7 +9,13 @@ import { Progress } from "@/components/ui/progress"
 import { BarChart3, Users, ShoppingCart, TrendingUp, Settings, LogOut } from "lucide-react"
 
 export default function DashboardPage() {
-  const [user, setUser] = useState<any>(null)
+  type User = {
+    name: string
+    email: string
+    role: string
+    company: string
+  }
+  const [user, setUser] = useState<User | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const router = useRouter()
 

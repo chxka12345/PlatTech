@@ -25,6 +25,7 @@ export async function POST(req: Request) {
     try {
       result = await response.json();
     } catch (err) {
+      console.error(err);
       const text = await response.text();
       return new Response(JSON.stringify({ message: text || "Login failed" }), {
         status: response.status,
