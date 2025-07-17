@@ -1,4 +1,5 @@
 from datetime import datetime
+import traceback
 from fastapi import APIRouter, HTTPException, Depends, Request
 from app.models.user import UserRegister, UserLogin
 from app.database.dynamodb import table_main, table_record
@@ -7,30 +8,50 @@ from app.auth.jwt_handler import create_access_token
 from app.auth.jwt_handler import get_current_user
 from boto3.dynamodb.conditions import Key, Attr
 from decimal import Decimal
+import random
+import string
 
 router = APIRouter()
 
+def generate_employee_id(role: str, company: str) -> str:
+    role_prefix = ''.join(filter(str.isalpha, role.upper()))[:3]
+    company_prefix = ''.join(filter(str.isalpha, company.upper()))[:3]
+    random_number = ''.join(random.choices(string.digits, k=4))
+    return f"{company_prefix}-{role_prefix}-{random_number}"
+
+def is_employee_id_unique(employee_id: str) -> bool:
+    response = table_main.scan(
+        FilterExpression="employee_id = :eid",
+        ExpressionAttributeValues={":eid": employee_id}
+    )
+    return len(response.get("Items", [])) == 0
+
 @router.post("/register")
 def register_user(user: UserRegister):
-    response = table_main.get_item(Key={"intern_id": user.email})
-    if "Item" in response:
-        raise HTTPException(status_code=400, detail="User already exists")
+    try:
+        response = table_main.get_item(Key={"email": user.email})
+        if "Item" in response:
+            raise HTTPException(status_code=400, detail="User already exists")
 
-    table_main.put_item(
-        Item={
-            "intern_id": user.email,
-            "name": user.name,
-            "surname": user.surname,
-            "role": user.role,
-            "password": hash_password(user.password),
-            "approval": user.approval,
-        }
-    )
-    return {"message": "User registered successfully"}
+        table_main.put_item(
+            Item={
+                "employee_id": generate_employee_id(user.role, "FinMark Corporation"),
+                "name": user.name,
+                "surname": user.surname,
+                "email": user.email,
+                "role": user.role,
+                "password": hash_password(user.password),
+                "approval": user.approval,
+            }
+        )
+        return {"message": "User registered successfully"}
+    except Exception as e:
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=str(e))
 
 @router.post("/login")
 def login_user(user: UserLogin):
-    response = table_main.get_item(Key={"intern_id": user.email})
+    response = table_main.get_item(Key={"email": user.email})
     if "Item" not in response:
         raise HTTPException(status_code=400, detail="Invalid email or password")
 
@@ -44,7 +65,7 @@ def login_user(user: UserLogin):
 @router.get("/user")
 def get_user_details(user: dict = Depends(get_current_user)):
     email = user
-    response = table_main.get_item(Key={"intern_id": email})
+    response = table_main.get_item(Key={"email": email})
     user_data = response.get("Item")
     
     if not user_data:
@@ -94,14 +115,14 @@ def check_clock_in(intern_id: dict = Depends(get_current_user)):
     return {"message": "You can clock in."}
 
 @router.post("/dtr/clock_out")
-def clock_out(intern_id: dict = Depends(get_current_user)):
+def clock_out(email: dict = Depends(get_current_user)):
     date = datetime.now().strftime("%Y-%m-%d")
-    response = table_record.get_item(Key={"intern_id": intern_id, "date": date})
+    response = table_record.get_item(Key={"email": email, "date": date})
     dtr = response.get("Item")
     
     existing_record = table_record.get_item(
         Key={
-            "intern_id": intern_id,
+            "email": email,
             "date": date
         }
     )

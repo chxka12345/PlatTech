@@ -1,10 +1,9 @@
 "use client"
 
-import type React from "react"
-
 import { useState } from "react"
-import Link from "next/link"
 import { useRouter } from "next/navigation"
+import Link from "next/link"
+
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -16,6 +15,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState("")
   const [error, setError] = useState("")
   const [isLoading, setIsLoading] = useState(false)
+
   const router = useRouter()
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -23,25 +23,38 @@ export default function LoginPage() {
     setError("")
     setIsLoading(true)
 
-    // Simple validation
     if (!email || !password) {
       setError("Please fill in all fields")
       setIsLoading(false)
       return
     }
 
-    // Simulate API call
-    setTimeout(() => {
-      // For demo purposes, accept any email/password combination
-      if (email.includes("@") && password.length >= 6) {
-        // Store user session (in real app, this would be handled by proper auth)
-        localStorage.setItem("finmark_user", JSON.stringify({ email, loggedIn: true }))
-        router.push("/dashboard")
-      } else {
-        setError("Invalid email or password (password must be at least 6 characters)")
+    try {
+      const res = await fetch("/api/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email, password }),
+      })
+
+      if (!res.ok) {
+        const errData = await res.json()
+        throw new Error(errData?.detail || "Login failed")
       }
+
+      const data = await res.json()
+
+      // Save token in localStorage (or cookies for better security)
+      localStorage.setItem("access_token", data.access_token)
+      localStorage.setItem("finmark_user", JSON.stringify({ email: data.email, loggedIn: true }))
+
+      router.push("/dashboard")
+    } catch (err: any) {
+      setError(err.message || "An unexpected error occurred")
+    } finally {
       setIsLoading(false)
-    }, 1000)
+    }
   }
 
   return (
@@ -105,13 +118,6 @@ export default function LoginPage() {
                 <Link href="/signup" className="text-blue-600 hover:underline">
                   Sign up here
                 </Link>
-              </p>
-            </div>
-
-            {/* Demo credentials info */}
-            <div className="mt-4 p-3 bg-gray-50 rounded-lg">
-              <p className="text-xs text-gray-600 text-center">
-                <strong>Demo:</strong> Use any email and password (6+ chars)
               </p>
             </div>
           </CardContent>

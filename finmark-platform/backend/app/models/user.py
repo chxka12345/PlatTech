@@ -1,6 +1,6 @@
 from datetime import datetime
 from typing import Optional
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, validator
 
 class UserRegister(BaseModel):
     name: str
@@ -8,12 +8,14 @@ class UserRegister(BaseModel):
     email: EmailStr
     role: str
     password: str
-    approval: str
+    approval: str = "Pending"
 
-    def validate_role(self):
-        if self.role not in ["Intern", "Admin"]:
-            raise ValueError("Role must be 'Intern' or 'Admin'.")
-
+    @validator("role")
+    def validate_role(cls, v):
+        valid_roles = ["Administrator", "Manager", "Data Analyst", "Developer", "End User"]
+        if v not in valid_roles:
+            raise ValueError(f"Role must be one of: {', '.join(valid_roles)}")
+        return v
 class UserLogin(BaseModel):
     email: EmailStr
     password: str

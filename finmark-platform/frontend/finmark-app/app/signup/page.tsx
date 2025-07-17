@@ -17,12 +17,12 @@ export default function SignupPage() {
     firstName: "",
     lastName: "",
     email: "",
-    company: "",
     role: "",
     password: "",
     confirmPassword: "",
+    approval: "Pending",
   })
-  const [error, setError] = useState("")
+  const [error, setError] = useState<string | { msg: string }[] | { msg: string } | null>("")
   const [isLoading, setIsLoading] = useState(false)
   const router = useRouter()
 
@@ -35,49 +35,48 @@ export default function SignupPage() {
     setError("")
     setIsLoading(true)
 
-    // Validation
-    if (
-      !formData.firstName ||
-      !formData.lastName ||
-      !formData.email ||
-      !formData.company ||
-      !formData.role ||
-      !formData.password ||
-      !formData.confirmPassword
-    ) {
+    const { firstName, lastName, email, role, password, confirmPassword } = formData
+
+    // Client-side validation
+    if (!firstName || !lastName || !email || !role || !password || !confirmPassword) {
       setError("Please fill in all fields")
       setIsLoading(false)
       return
     }
 
-    if (formData.password !== formData.confirmPassword) {
+    if (password !== confirmPassword) {
       setError("Passwords do not match")
       setIsLoading(false)
       return
     }
 
-    if (formData.password.length < 6) {
+    if (password.length < 6) {
       setError("Password must be at least 6 characters")
       setIsLoading(false)
       return
     }
 
-    // Simulate API call
-    setTimeout(() => {
-      // Store user session
-      localStorage.setItem(
-        "finmark_user",
-        JSON.stringify({
-          email: formData.email,
-          name: `${formData.firstName} ${formData.lastName}`,
-          company: formData.company,
-          role: formData.role,
-          loggedIn: true,
-        }),
-      )
-      router.push("/dashboard")
+    // API call
+    try {
+      const res = await fetch("/api/signup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      })
+
+      const data = await res.json()
+
+      if (!res.ok) {
+        setError(data.message || "Registration failed")
+      } else {
+        router.push("/login")
+      }
+    } catch (err) {
+      setError("Server error. Please try again.")
+    } finally {
       setIsLoading(false)
-    }, 1000)
+    }
+    console.log("Error value:", error)
   }
 
   return (
@@ -101,9 +100,13 @@ export default function SignupPage() {
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
               {error && (
-                <Alert variant="destructive">
-                  <AlertDescription>{error}</AlertDescription>
-                </Alert>
+                <div className="text-red-500 text-sm">
+                  {typeof error === 'string'
+                    ? error
+                    : Array.isArray(error)
+                      ? error.map((e, i) => <div key={i}>{e.msg}</div>)
+                      : error?.msg || 'Something went wrong'}
+                </div>
               )}
 
               <div className="grid grid-cols-2 gap-4">
@@ -142,28 +145,19 @@ export default function SignupPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="company">Company</Label>
-                <Input
-                  id="company"
-                  placeholder="Your Company Name"
-                  value={formData.company}
-                  onChange={(e) => handleInputChange("company", e.target.value)}
-                  required
-                />
-              </div>
-
-              <div className="space-y-2">
                 <Label htmlFor="role">Role</Label>
-                <Select onValueChange={(value) => handleInputChange("role", value)}>
+                <Select 
+                value={formData.role}
+                onValueChange={(value) => handleInputChange("role", value)}>
                   <SelectTrigger>
                     <SelectValue placeholder="Select your role" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="admin">Administrator</SelectItem>
-                    <SelectItem value="manager">Manager</SelectItem>
-                    <SelectItem value="analyst">Data Analyst</SelectItem>
-                    <SelectItem value="developer">Developer</SelectItem>
-                    <SelectItem value="user">End User</SelectItem>
+                    <SelectItem value="Administrator">Administrator</SelectItem>
+                    <SelectItem value="Manager">Manager</SelectItem>
+                    <SelectItem value="Data Analyst">Data Analyst</SelectItem>
+                    <SelectItem value="Developer">Developer</SelectItem>
+                    <SelectItem value="End User">End User</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
