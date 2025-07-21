@@ -3,11 +3,11 @@ resource "aws_dynamodb_table" "interns" {
   billing_mode = "PAY_PER_REQUEST"
 
   attribute {
-    name = "intern_id"
+    name = "email"
     type = "S"
   }
 
-  hash_key = "intern_id"
+  hash_key = "email"
 
   tags = {
     Name        = "${var.project_name}-interns"
@@ -19,7 +19,7 @@ resource "aws_dynamodb_table" "daily_time_records" {
   billing_mode = "PAY_PER_REQUEST"
 
   attribute {
-    name = "intern_id"
+    name = "employee_id"
     type = "S"
   }
 
@@ -28,7 +28,7 @@ resource "aws_dynamodb_table" "daily_time_records" {
     type = "S"
   }
 
-  hash_key  = "intern_id"
+  hash_key  = "employee_id"
   range_key = "date"
 
   tags = {

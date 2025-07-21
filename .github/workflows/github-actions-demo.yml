@@ -106,8 +106,8 @@ jobs:
           -var="JWT_SECRET=${{ secrets.JWT_SECRET }}" \
           -var="AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}" \
           -var="AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}" \
-          -var="fastapi_image_url=docker.io/${{ secrets.DOCKER_USERNAME }}/demo-exam-app:backend" \
-          -var="nextjs_image_url=docker.io/${{ secrets.DOCKER_USERNAME }}/demo-exam-app:frontend" \
+          -var="fastapi_image_url=docker.io/${{ secrets.DOCKER_USERNAME }}/finer-finmark:backend" \
+          -var="nextjs_image_url=docker.io/${{ secrets.DOCKER_USERNAME }}/finer-finmark:frontend" \
           -out=tfplan
         working-directory: ./terraform
 
