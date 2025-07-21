@@ -3,10 +3,10 @@ name: CI/CD Pileline
 on:
   push:
     branches:
-      - feature-branch
+      - main
   pull_request:
     branches:
-      - feature-branch
+      - main
 
 jobs:
   test:
