@@ -32,6 +32,7 @@ export async function POST(req: Request) {
     try {
       result = await response.json();
     } catch (err) {
+      console.error(err);
       const text = await response.text();
       return new Response(JSON.stringify({ message: text || "Signup failed" }), {
         status: response.status,
@@ -48,6 +49,7 @@ export async function POST(req: Request) {
       status: 200,
     });
   } catch (err) {
+    console.error("Error during signup:", err);
     return new Response(JSON.stringify({ message: "Internal server error" }), {
       status: 500,
     });

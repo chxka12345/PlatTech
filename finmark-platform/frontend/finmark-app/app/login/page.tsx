@@ -50,8 +50,9 @@ export default function LoginPage() {
       localStorage.setItem("finmark_user", JSON.stringify({ email: data.email, loggedIn: true }))
 
       router.push("/dashboard")
-    } catch (err: any) {
-      setError(err.message || "An unexpected error occurred")
+    } catch (err) {
+      console.error("Login error:", err)
+      setError("An unexpected error occurred")
     } finally {
       setIsLoading(false)
     }

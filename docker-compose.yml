@@ -1,0 +1,27 @@
+version: "3.8"
+services:
+  backend:
+    build: ./finmark-platform/backend
+    # image: "${DOCKER_USERNAME}/demo-exam-app:backend"
+    image: "cheskanailyn/finer-finmark:backend"
+    ports:
+      - "8000:8000"
+    networks:
+      - app-network
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  frontend:
+    build: ./finmark-platform/frontend/finmark-app
+    # image: "${DOCKER_USERNAME}/demo-exam-app:frontend"
+    image: "cheskanailyn/finer-finmark:frontend"
+    ports:
+      - "3000:3000"
+    networks:
+      - app-network
+    depends_on:
+      - backend
+
+networks:
+  app-network:
+    driver: bridge
