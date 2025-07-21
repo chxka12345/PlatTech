@@ -3,12 +3,12 @@
 
 # The variables are used to configure the AWS provider
 aws_profile = "default"
-aws_region  = "ap-southeast-2"
+aws_region  = "ap-southeast-1"
 
 # The variables are used to configure the VPC
-project_name    = "dtr-tracker"
+project_name    = "finer-finmark"
 vpc_cidr        = "10.16.0.0/16"
-azs             = ["ap-southeast-2a", "ap-southeast-2b"]
+azs             = ["ap-southeast-1a", "ap-southeast-1b"]
 public_subnets  = ["10.16.1.0/24", "10.16.2.0/24"]
 private_subnets = ["10.16.3.0/24", "10.16.4.0/24"]
 
